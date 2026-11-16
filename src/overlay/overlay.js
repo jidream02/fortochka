@@ -216,7 +216,7 @@ function update(dt, t) {
       const hit = landOn(p, prevY)
       if (hit) {
         if (p.kind === 'snow') {
-          if (!pile || !hit.s.add(p.x, p.r * 0.9)) p.dead = true
+          if (!pile || !hit.s.add(p.x, p.r * 1.5)) p.dead = true
           else slideOff(p, hit.s)
         } else if (p.kind === 'rain') {
           for (let k = 0; k < 2; k++) {

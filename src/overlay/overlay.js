@@ -8,6 +8,9 @@ let H = window.innerHeight
 let floorY = H - 48
 let settings = null
 let weather = null
+let mood = null
+let glowLayer = null
+let glowKey = ''
 let windows = []
 
 const flakes = []
@@ -256,9 +259,37 @@ function update(dt, t) {
   if (settings.pet.enabled && !settings.paused) pet.update(dt, W, groundAt, fx)
 }
 
+function hexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255].join(', ')
+}
+
+// мягкое свечение по краям экрана в цвет настроения; рисуется один раз и кэшируется
+function glow() {
+  const amount = settings.mood.glow
+  if (!mood || amount <= 0 || settings.paused) return null
+  const key = `${mood.palette.glow}:${amount}:${W}x${H}`
+  if (key === glowKey) return glowLayer
+  glowKey = key
+  glowLayer = document.createElement('canvas')
+  glowLayer.width = W
+  glowLayer.height = H
+  const g = glowLayer.getContext('2d')
+  const rgb = hexToRgb(mood.palette.glow)
+  const grad = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.hypot(W, H) / 2)
+  grad.addColorStop(0, `rgba(${rgb}, 0)`)
+  grad.addColorStop(1, `rgba(${rgb}, ${0.22 * amount})`)
+  g.fillStyle = grad
+  g.fillRect(0, 0, W, H)
+  return glowLayer
+}
+
 function draw(t) {
   ctx.clearRect(0, 0, W, H)
   if (!settings) return
+
+  const layer = glow()
+  if (layer) ctx.drawImage(layer, 0, 0, W, H)
 
   for (const s of surfaces.values()) s.draw(ctx)
   for (const p of flakes) drawParticle(ctx, p, t)
@@ -328,6 +359,11 @@ function applySettings(s) {
 
 window.app.onSettings(applySettings)
 window.app.onWeather(w => { weather = w })
+window.app.onMood(m => {
+  mood = m
+  if (m) Drifts.style.shade = `rgba(${hexToRgb(m.palette.accent)}, 0.55)`
+})
+window.app.getMood().then(m => { if (m) { mood = m; Drifts.style.shade = `rgba(${hexToRgb(m.palette.accent)}, 0.55)` } })
 window.app.onWindows(list => {
   windows = list
   rebuildSurfaces()

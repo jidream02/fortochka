@@ -3,6 +3,9 @@ const path = require('path')
 const store = require('./store')
 const weather = require('./weather')
 const { watchWindows } = require('./windows')
+const mood = require('./mood')
+const wallpaper = require('./wallpaper')
+const fs = require('fs')
 
 let overlay = null
 let panel = null
@@ -11,6 +14,8 @@ let stopWatching = () => {}
 let lastWeather = null
 let weatherTimer = null
 let quitting = false
+let currentMood = null
+let wallpaperRestored = false
 
 if (!app.requestSingleInstanceLock()) {
   app.quit()
@@ -63,6 +68,7 @@ function createOverlay() {
   overlay.webContents.on('did-finish-load', () => {
     overlay.webContents.send('display', displayInfo())
     if (lastWeather) overlay.webContents.send('weather', lastWeather)
+    if (currentMood) overlay.webContents.send('mood', currentMood)
   })
 
   stopWatching()
@@ -85,7 +91,9 @@ function createPanel() {
     autoHideMenuBar: true,
     icon: path.join(__dirname, '..', 'assets', 'icon.png'),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      autoplayPolicy: 'no-user-gesture-required',
+      backgroundThrottling: false
     }
   })
   panel.loadFile(path.join(__dirname, 'panel', 'index.html'))
@@ -136,9 +144,47 @@ function refreshTray() {
   ]))
 }
 
+function updateMood(force = false) {
+  const next = mood.compute(store.get(), lastWeather)
+  if (!force && currentMood && currentMood.key === next.key) return
+  currentMood = next
+  send('mood', currentMood)
+}
+
+async function toggleWallpaper(on) {
+  try {
+    if (on) {
+      if (!store.get().wallpaperOriginal) store.set({ wallpaperOriginal: await wallpaper.get() })
+      updateMood(true)
+    } else {
+      await wallpaper.restore(store.get().wallpaperOriginal)
+      store.set({ wallpaperOriginal: null })
+    }
+  } catch (err) {
+    console.error('wallpaper:', err.message)
+  }
+}
+
+async function applyWallpaper(dataUrl, key) {
+  if (!store.get().mood.wallpaper) return false
+  const dir = path.join(app.getPath('userData'), 'wallpapers')
+  fs.mkdirSync(dir, { recursive: true })
+  // имя каждый раз новое — иначе Windows покажет старую картинку из кэша
+  const file = path.join(dir, `${key}-${Date.now()}.jpg`)
+  fs.writeFileSync(file, Buffer.from(dataUrl.split(',')[1], 'base64'))
+  for (const old of fs.readdirSync(dir)) {
+    if (path.join(dir, old) !== file) fs.rmSync(path.join(dir, old), { force: true })
+  }
+  await wallpaper.set(file)
+  return true
+}
+
 function applySettings(patch) {
   const before = store.get().weather
+  const wasWallpaper = store.get().mood.wallpaper
   const s = store.set(patch)
+  if (s.mood.wallpaper !== wasWallpaper) toggleWallpaper(s.mood.wallpaper)
+  if (patch.season || patch.weather) updateMood()
   if (patch.autostart !== undefined) {
     app.setLoginItemSettings({ openAtLogin: s.autostart, args: ['--hidden'] })
   }
@@ -160,6 +206,7 @@ async function updateWeather() {
   try {
     lastWeather = { ...(await weather.current(lat, lon)), city: store.get().weather.city }
     send('weather', lastWeather)
+    updateMood()
   } catch (err) {
     console.error('weather:', err.message)
   }
@@ -174,6 +221,12 @@ function scheduleWeather() {
 ipcMain.handle('settings:get', () => store.get())
 ipcMain.handle('settings:set', (_e, patch) => applySettings(patch))
 ipcMain.handle('weather:get', () => lastWeather)
+ipcMain.handle('mood:get', () => currentMood)
+ipcMain.handle('wallpaper:supported', () => wallpaper.supported())
+ipcMain.handle('wallpaper:apply', (_e, dataUrl, key) => applyWallpaper(dataUrl, key).catch(err => {
+  console.error('wallpaper:', err.message)
+  return false
+}))
 ipcMain.handle('weather:city', async (_e, name) => {
   const found = await weather.findCity(name)
   if (!found) return null
@@ -191,6 +244,11 @@ ipcMain.on('overlay:mouse', (_e, catchMouse) => {
 
 app.whenReady().then(() => {
   store.load()
+  // если в прошлый раз программа упала с нашими обоями — вернуть старые
+  const s = store.get()
+  if (s.wallpaperOriginal && !s.mood.wallpaper) toggleWallpaper(false)
+  updateMood(true)
+  setInterval(updateMood, 60 * 1000)
   createOverlay()
   createPanel()
   createTray()
@@ -205,9 +263,18 @@ app.whenReady().then(() => {
   screen.on('display-removed', rebuild)
 })
 
-app.on('before-quit', () => {
+app.on('before-quit', e => {
   quitting = true
   stopWatching()
+  // при выключении возвращаем обои, которые были до нас
+  const original = store.get().wallpaperOriginal
+  if (original && !wallpaperRestored) {
+    e.preventDefault()
+    wallpaperRestored = true
+    wallpaper.restore(original).catch(() => {}).finally(() => app.quit())
+  }
 })
+
+app.on('will-quit', () => store.flush())
 
 app.on('window-all-closed', e => e.preventDefault())

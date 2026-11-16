@@ -30,8 +30,22 @@ const defaults = {
   radio: {
     station: 0,
     volume: 0.6,
-    custom: ''
-  }
+    custom: '',
+    vibe: false
+  },
+  mood: {
+    theme: true,
+    glow: 0.35,
+    wallpaper: false
+  },
+  ambient: {
+    enabled: false,
+    auto: true,
+    volume: 0.5,
+    layers: { rain: 0, wind: 0, fire: 0, crickets: 0 }
+  },
+  // обои, которые стояли до нас — чтобы вернуть при выключении
+  wallpaperOriginal: null
 }
 
 let file
@@ -68,11 +82,14 @@ function get() {
 function set(patch) {
   data = merge(data, patch)
   clearTimeout(saveTimer)
-  saveTimer = setTimeout(() => {
-    fs.mkdirSync(path.dirname(file), { recursive: true })
-    fs.writeFileSync(file, JSON.stringify(data, null, 2))
-  }, 400)
+  saveTimer = setTimeout(flush, 400)
   return data
 }
 
-module.exports = { load, get, set }
+function flush() {
+  clearTimeout(saveTimer)
+  fs.mkdirSync(path.dirname(file), { recursive: true })
+  fs.writeFileSync(file, JSON.stringify(data, null, 2))
+}
+
+module.exports = { load, get, set, flush }

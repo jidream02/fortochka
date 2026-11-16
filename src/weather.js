@@ -20,6 +20,15 @@ function describe(code) {
   return '—'
 }
 
+function sky(code) {
+  if (code <= 1) return 'clear'
+  if (code <= 3) return 'cloudy'
+  if (code === 45 || code === 48) return 'fog'
+  if (code >= 95) return 'storm'
+  const p = precip(code)
+  return p || 'cloudy'
+}
+
 function precip(code) {
   if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'snow'
   if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95) return 'rain'
@@ -28,7 +37,7 @@ function precip(code) {
 
 async function current(lat, lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-    '&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,precipitation'
+    '&current=temperature_2m,is_day,weather_code,wind_speed_10m,wind_direction_10m,precipitation'
   const res = await fetch(url)
   const { current: c } = await res.json()
   // направление ветра — откуда дует; нас интересует только лево/право
@@ -37,6 +46,7 @@ async function current(lat, lon) {
     temp: Math.round(c.temperature_2m),
     text: describe(c.weather_code),
     precip: precip(c.weather_code),
+    sky: sky(c.weather_code),
     amount: c.precipitation,
     wind: Math.round(c.wind_speed_10m),
     windSide: side,

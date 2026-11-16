@@ -2,6 +2,7 @@ const $ = s => document.querySelector(s)
 const $$ = s => [...document.querySelectorAll(s)]
 
 let S = null
+let M = null // текущее настроение
 
 const SEASONS = [
   { id: 'winter', icon: '❄', title: 'Зима', sub: 'Снег и сугробы', desc: 'Снег падает поверх рабочего стола и копится сугробами на окнах.' },
@@ -21,6 +22,20 @@ const STATIONS = [
   { name: 'Secret Agent', sub: 'Музыка для шпионских миссий', url: 'https://ice1.somafm.com/secretagent-128-mp3' },
   { name: 'Folk Forward', sub: 'Инди-фолк', url: 'https://ice1.somafm.com/folkfwd-128-mp3' }
 ]
+
+// какая станция под какое настроение (индексы в STATIONS)
+function stationFor(mood) {
+  if (!mood) return 1
+  const month = new Date().getMonth()
+  if (mood.sky === 'snow') return month === 11 || month === 0 ? 5 : 2
+  if (mood.sky === 'rain' || mood.sky === 'storm') return 4
+  if (mood.sky === 'fog') return 2
+  if (mood.time === 'night') return 6
+  if (mood.time === 'dawn' || mood.time === 'dusk') return 0
+  if (mood.season === 'autumn') return 3
+  if (mood.season === 'summer' || mood.season === 'spring') return 8
+  return 1
+}
 
 const MODES = [
   { id: 'walk', title: 'Гуляет' },
@@ -388,6 +403,113 @@ function tick(now) {
   requestAnimationFrame(tick)
 }
 
+
+// --- настроение: цвета, обои, звуки ----------------------------------------
+
+const DEFAULT_THEME = {
+  bg: '#141a2b', bg2: '#1b2236', card: '#1f2740', card2: '#263052',
+  line: '#2e3858', accent: '#6aa8ff', accent2: '#9ec5ff'
+}
+
+function applyTheme() {
+  const pal = S && S.mood.theme && M ? M.palette : DEFAULT_THEME
+  const root = document.documentElement.style
+  for (const k of ['bg', 'bg2', 'card', 'card2', 'line', 'accent', 'accent2']) root.setProperty('--' + k, pal[k])
+}
+
+function daySeed() {
+  const d = new Date()
+  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()
+}
+
+function drawWallPreview() {
+  if (!M) return
+  Wallpaper.paint($('#wall-preview'), M, daySeed())
+}
+
+let wallKey = null
+let wallBusy = false
+
+async function pushWallpaper(force = false) {
+  if (!S.mood.wallpaper || !M || wallBusy) return
+  const key = M.key + ':' + daySeed()
+  if (!force && key === wallKey) return
+  wallBusy = true
+  $('#wall-status').textContent = 'Рисую…'
+  const c = document.createElement('canvas')
+  const dpr = window.devicePixelRatio || 1
+  c.width = Math.min(3840, Math.round(screen.width * dpr))
+  c.height = Math.min(2160, Math.round(screen.height * dpr))
+  Wallpaper.paint(c, M, daySeed())
+  const ok = await window.app.applyWallpaper(c.toDataURL('image/jpeg', 0.92), M.key)
+  wallKey = ok ? key : null
+  $('#wall-status').textContent = ok ? 'Обои обновлены' : 'Не получилось поставить обои'
+  wallBusy = false
+}
+
+$('#wall-apply').addEventListener('click', async () => {
+  if (!S.mood.wallpaper) await save({ mood: { wallpaper: true } })
+  pushWallpaper(true)
+})
+
+const amb = new Ambient.Ambient()
+
+function syncAmbient() {
+  const levels = S.ambient.auto ? Ambient.levelsFor(M) : S.ambient.layers
+  amb.setVolume(S.ambient.volume)
+  amb.setLevels(levels)
+  if (S.ambient.enabled && !amb.on) amb.start()
+  if (!S.ambient.enabled && amb.on) amb.stop()
+  $$('[data-layer]').forEach(el => {
+    if (document.activeElement !== el) el.value = levels[el.dataset.layer]
+  })
+  const names = { rain: 'дождь', wind: 'ветер', fire: 'камин', crickets: 'сверчки' }
+  const on = Object.keys(levels).filter(k => levels[k] > 0.05).map(k => names[k])
+  $('#amb-sub').textContent = !S.ambient.enabled ? 'Выключены' : on.length ? 'Сейчас: ' + on.join(', ') : 'Сейчас тишина — подвигай ползунки'
+}
+
+$$('[data-layer]').forEach(el => {
+  el.addEventListener('input', () => {
+    const layers = { ...(S.ambient.auto ? Ambient.levelsFor(M) : S.ambient.layers), [el.dataset.layer]: +el.value }
+    save({ ambient: { auto: false, layers } })
+  })
+})
+
+// радио само переключается под погоду
+function syncVibeRadio() {
+  if (!S.radio.vibe || !playing || !M) return
+  const idx = stationFor(M)
+  if (current === STATIONS[idx]) return
+  save({ radio: { station: idx } })
+  play(STATIONS[idx])
+}
+
+$('#vibe-tile').addEventListener('click', async () => {
+  const on = !(S.radio.vibe && S.ambient.enabled)
+  await save({ radio: { vibe: on }, ambient: { enabled: on, auto: true } })
+  if (on) {
+    const idx = stationFor(M)
+    save({ radio: { station: idx } })
+    play(STATIONS[idx])
+  } else {
+    stop()
+  }
+})
+
+function onMood(m) {
+  M = m
+  applyTheme()
+  $('#mood-line').textContent = m ? 'Сейчас: ' + m.title : ''
+  $('#mood-now').textContent = m ? 'Сейчас: ' + m.title + '. Цвета, обои и звуки подстраиваются сами.' : ''
+  if ($('#mood').classList.contains('active')) drawWallPreview()
+  pushWallpaper()
+  syncAmbient()
+  syncVibeRadio()
+}
+
+window.app.onMood(onMood)
+$('[data-page="mood"]').addEventListener('click', () => setTimeout(drawWallPreview, 0))
+
 // --- отрисовка состояния ---------------------------------------------------
 
 function render() {
@@ -405,6 +527,14 @@ function render() {
   $$('[data-range]').forEach(el => {
     if (document.activeElement !== el) el.value = getPath(S, el.dataset.range)
   })
+
+  const vibeOn = S.radio.vibe && S.ambient.enabled
+  $('#vibe-tile').classList.toggle('on', vibeOn)
+  $('#vibe-tile .badge').textContent = vibeOn ? 'Вкл' : 'Выкл'
+  if (!S.mood.wallpaper) wallKey = null
+  applyTheme()
+  syncAmbient()
+  pushWallpaper()
 
   $('#pause').textContent = S.paused ? 'Продолжить' : 'Пауза'
   $('#pause').classList.toggle('on', S.paused)
@@ -429,9 +559,12 @@ window.app.onSettings(s => {
   render()
 })
 
-Promise.all([window.app.getSettings(), window.app.getWeather()]).then(([s, w]) => {
+Promise.all([window.app.getSettings(), window.app.getWeather(), window.app.getMood(), window.app.wallpaperSupported()]).then(([s, w, m, wallOk]) => {
   S = s
+  if (!wallOk) $('#wall-sub').textContent = 'На этой системе поменять обои не получится — только Windows, KDE и GNOME'
   render()
+  onMood(m)
+  if (S.radio.vibe) play(STATIONS[stationFor(M)])
   renderWeather(w)
   renderRadio()
   requestAnimationFrame(tick)

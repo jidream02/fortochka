@@ -12,6 +12,11 @@
 
 * { box-sizing: border-box; }
 
+/* цвета плавно перетекают при смене настроения */
+body, .side, .card, .tile, .season, .station, .hero, .btn, .switch, .chip, .kind, input {
+  transition: background-color 1.2s ease, border-color 1.2s ease, color .3s ease;
+}
+
 html, body {
   margin: 0;
   height: 100%;
@@ -88,7 +93,7 @@ small { color: var(--muted); display: block; font-size: 12px; }
   height: 210px;
   border-radius: 18px;
   overflow: hidden;
-  background: linear-gradient(160deg, #22305a, #151b2e 70%);
+  background: linear-gradient(160deg, var(--card2), var(--bg) 70%);
   border: 1px solid var(--line);
 }
 .hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -125,7 +130,7 @@ small { color: var(--muted); display: block; font-size: 12px; }
 
 .tiles {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
 .tile {
@@ -292,3 +297,9 @@ main::-webkit-scrollbar-thumb { background: var(--line); border-radius: 10px; bo
 
 .btn.danger { background: #e07a7a; }
 .btn.danger:hover { background: #eb9a9a; }
+
+.mood-line { margin-top: 10px !important; font-size: 12.5px; color: var(--accent2) !important; }
+.wall-card { padding: 14px; }
+.wall-card canvas { display: block; width: 100%; height: auto; border-radius: 10px; }
+.wall-actions { margin-top: 12px; }
+.wall-actions small { margin-left: 6px; }

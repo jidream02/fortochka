@@ -16,6 +16,7 @@
       <button data-page="effects" title="Эффекты"><svg viewBox="0 0 24 24"><path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7"/></svg></button>
       <button data-page="weather" title="Погода"><svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 0-8 6 6 0 0 0-11.6 1.5A3.3 3.3 0 0 0 7 18z"/></svg></button>
       <button data-page="radio" title="Радио"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></button>
+      <button data-page="mood" title="Настроение"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="9" r="1.3"/><circle cx="14" cy="7.5" r="1.3"/><circle cx="16.5" cy="12" r="1.3"/><path d="M12 21a2.5 2.5 0 0 1 0-5h1.5a2 2 0 0 0 0-4"/></svg></button>
       <button data-page="pet" title="Питомец"><svg viewBox="0 0 24 24"><path d="M5 9l1-5 4 3h4l4-3 1 5c1 2 1 4 0 6-1.5 3-4 5-7 5s-5.5-2-7-5c-1-2-1-4 0-6z"/></svg></button>
     </nav>
     <button data-page="settings" class="bottom" title="Настройки"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
@@ -29,6 +30,7 @@
         <div class="hero-text">
           <h1 id="season-title">Зима</h1>
           <p id="season-desc">Снег падает поверх рабочего стола и копится сугробами на окнах.</p>
+          <p class="mood-line" id="mood-line"></p>
         </div>
         <div class="hero-btns">
           <button class="pause" id="pause">Пауза</button>
@@ -60,6 +62,16 @@
           <span class="badge">Вкл</span>
           <b>Питомец</b>
           <small id="pet-sub">Гуляет по панели задач</small>
+        </button>
+        <button class="tile" id="vibe-tile">
+          <span class="badge">Вкл</span>
+          <b>Вайб</b>
+          <small id="vibe-sub">Радио и звуки природы под погоду</small>
+        </button>
+        <button class="tile" data-toggle="mood.wallpaper">
+          <span class="badge">Вкл</span>
+          <b>Обои под погоду</b>
+          <small>Рисуются сами и меняются вместе с погодой</small>
         </button>
       </div>
     </section>
@@ -117,9 +129,47 @@
           <div class="inline"><input id="custom-url" placeholder="https://…" autocomplete="off"><button class="btn">Играть</button></div></form>
         <div class="row"><div><b>Таймер сна</b><small id="sleep-left">Музыка выключится сама</small></div>
           <div class="chips" id="sleep"></div></div>
+        <div class="row"><div><b>Станция под настроение</b><small>Снег за окном — эмбиент, дождь — что-то тёплое, ночь — космос</small></div>
+          <button class="switch" data-toggle="radio.vibe"></button></div>
+      </div>
+
+      <h2>Звуки природы</h2>
+      <p class="hint">Генерируются прямо в программе, можно слушать вместе с радио.</p>
+      <div class="card rows">
+        <div class="row"><div><b>Звуки</b><small id="amb-sub">Выключены</small></div>
+          <button class="switch" data-toggle="ambient.enabled"></button></div>
+        <div class="row"><div><b>Под погоду</b><small>Сами подбираются под то, что за окном. Сдвинешь ползунок — подбор выключится</small></div>
+          <button class="switch" data-toggle="ambient.auto"></button></div>
+        <label class="row"><div><b>Громкость</b></div>
+          <input type="range" min="0" max="1" step="0.01" data-range="ambient.volume"></label>
+        <label class="row"><div><b>Дождь</b></div><input type="range" min="0" max="1" step="0.01" data-layer="rain"></label>
+        <label class="row"><div><b>Ветер</b></div><input type="range" min="0" max="1" step="0.01" data-layer="wind"></label>
+        <label class="row"><div><b>Камин</b></div><input type="range" min="0" max="1" step="0.01" data-layer="fire"></label>
+        <label class="row"><div><b>Сверчки</b></div><input type="range" min="0" max="1" step="0.01" data-layer="crickets"></label>
       </div>
       <div class="stations" id="stations"></div>
       <p class="hint">Станции — <a href="https://somafm.com" target="_blank">SomaFM</a>, некоммерческое радио из Сан-Франциско.</p>
+    </section>
+
+    <!-- Настроение -->
+    <section class="page" id="mood">
+      <h1>Настроение</h1>
+      <p class="hint" id="mood-now"></p>
+      <div class="card wall-card">
+        <canvas id="wall-preview" width="640" height="360"></canvas>
+        <div class="inline wall-actions">
+          <button class="btn" id="wall-apply">Поставить на рабочий стол</button>
+          <small id="wall-status"></small>
+        </div>
+      </div>
+      <div class="card rows">
+        <div class="row"><div><b>Обои под погоду</b><small id="wall-sub">Картинка рисуется сама: сезон, время суток и погода. Твои обои вернутся, когда выключишь</small></div>
+          <button class="switch" data-toggle="mood.wallpaper"></button></div>
+        <div class="row"><div><b>Цвета программы под настроение</b><small>Окно перекрашивается в мягкие тона неба</small></div>
+          <button class="switch" data-toggle="mood.theme"></button></div>
+        <label class="row"><div><b>Подсветка по краям экрана</b><small>Еле заметное свечение в цвет погоды. 0 — выключено</small></div>
+          <input type="range" min="0" max="1" step="0.05" data-range="mood.glow"></label>
+      </div>
     </section>
 
     <!-- Питомец -->
@@ -159,6 +209,8 @@
 
   <audio id="audio" preload="none"></audio>
   <script src="../shared/pets.js"></script>
+  <script src="wallpaper.js"></script>
+  <script src="ambient.js"></script>
   <script src="panel.js"></script>
 </body>
 </html>

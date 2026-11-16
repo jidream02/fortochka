@@ -78,6 +78,8 @@ $$('[data-range]').forEach(el => {
 })
 
 $('#pause').addEventListener('click', () => save({ paused: !S.paused }))
+$('#quit').addEventListener('click', () => window.app.quit())
+$('#quit-top').addEventListener('click', () => window.app.quit())
 
 // --- сезоны --------------------------------------------------------------
 

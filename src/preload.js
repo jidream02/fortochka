@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('app', {
   setSettings: patch => ipcRenderer.invoke('settings:set', patch),
   getWeather: () => ipcRenderer.invoke('weather:get'),
   findCity: name => ipcRenderer.invoke('weather:city', name),
+  quit: () => ipcRenderer.send('app:quit'),
   catchMouse: on => ipcRenderer.send('overlay:mouse', on),
   onSettings: listen('settings'),
   onWeather: listen('weather'),

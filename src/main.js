@@ -96,9 +96,13 @@ function createPanel() {
   panel.once('ready-to-show', () => {
     if (!process.argv.includes('--hidden')) panel.show()
   })
-  // закрытие = спрятать, иначе радио выключится
+  // по умолчанию крестик выключает программу целиком; спрятать в трей — только если так настроено
   panel.on('close', e => {
-    if (quitting) return
+    if (quitting || !store.get().keepInTray) {
+      quitting = true
+      app.quit()
+      return
+    }
     e.preventDefault()
     panel.hide()
   })
@@ -175,6 +179,10 @@ ipcMain.handle('weather:city', async (_e, name) => {
   if (!found) return null
   applySettings({ weather: { ...found, live: true } })
   return found
+})
+ipcMain.on('app:quit', () => {
+  quitting = true
+  app.quit()
 })
 ipcMain.on('overlay:mouse', (_e, catchMouse) => {
   if (!overlay) return

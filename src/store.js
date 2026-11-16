@@ -6,6 +6,7 @@ const defaults = {
   season: 'winter',
   paused: false,
   autostart: false,
+  keepInTray: false,
   effects: {
     weather: true,
     drifts: true,

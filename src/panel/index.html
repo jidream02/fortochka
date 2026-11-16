@@ -30,7 +30,10 @@
           <h1 id="season-title">Зима</h1>
           <p id="season-desc">Снег падает поверх рабочего стола и копится сугробами на окнах.</p>
         </div>
-        <button class="pause" id="pause">Пауза</button>
+        <div class="hero-btns">
+          <button class="pause" id="pause">Пауза</button>
+          <button class="pause" id="quit-top" title="Выключить программу полностью">Выключить</button>
+        </div>
       </div>
 
       <div class="seasons" id="seasons"></div>
@@ -143,10 +146,14 @@
       <div class="card rows">
         <div class="row"><div><b>Запускать вместе с системой</b><small>Окно не откроется — только иконка в трее</small></div>
           <button class="switch" data-toggle="autostart"></button></div>
+        <div class="row"><div><b>Оставаться в трее после закрытия</b><small>Крестик спрячет окно, а снег и музыка останутся. Если выключено — крестик выключает всё</small></div>
+          <button class="switch" data-toggle="keepInTray"></button></div>
         <div class="row"><div><b>Пауза</b><small>Всё убрать с экрана, пока не включишь обратно</small></div>
           <button class="switch" data-toggle="paused"></button></div>
+        <div class="row"><div><b>Выключить Форточку</b><small>Полностью: снег, питомец, музыка</small></div>
+          <button class="btn danger" id="quit">Выключить</button></div>
       </div>
-      <p class="hint">Форточка v0.3 · закрытие окна не выключает программу — она живёт в трее.</p>
+      <p class="hint">Форточка v0.4</p>
     </section>
   </main>
 

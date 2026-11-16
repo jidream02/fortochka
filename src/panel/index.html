@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; media-src https: http:; img-src 'self' data:">
+  <title>Форточка</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <aside class="side">
+    <div class="logo" title="Форточка">
+      <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="15" rx="2"/><path d="M12 3v15M4 10.5h16"/><path class="sill" d="M2 20h20"/></svg>
+    </div>
+    <nav>
+      <button data-page="home" class="active" title="Главная"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg></button>
+      <button data-page="effects" title="Эффекты"><svg viewBox="0 0 24 24"><path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7"/></svg></button>
+      <button data-page="weather" title="Погода"><svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 0-8 6 6 0 0 0-11.6 1.5A3.3 3.3 0 0 0 7 18z"/></svg></button>
+      <button data-page="radio" title="Радио"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></button>
+      <button data-page="pet" title="Питомец"><svg viewBox="0 0 24 24"><path d="M5 9l1-5 4 3h4l4-3 1 5c1 2 1 4 0 6-1.5 3-4 5-7 5s-5.5-2-7-5c-1-2-1-4 0-6z"/></svg></button>
+    </nav>
+    <button data-page="settings" class="bottom" title="Настройки"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </aside>
+
+  <main>
+    <!-- Главная -->
+    <section class="page active" id="home">
+      <div class="hero">
+        <canvas id="preview"></canvas>
+        <div class="hero-text">
+          <h1 id="season-title">Зима</h1>
+          <p id="season-desc">Снег падает поверх рабочего стола и копится сугробами на окнах.</p>
+        </div>
+        <button class="pause" id="pause">Пауза</button>
+      </div>
+
+      <div class="seasons" id="seasons"></div>
+
+      <h2>Что включено</h2>
+      <p class="hint">Нажми на плитку, чтобы включить или выключить. Тонкие настройки — в разделе «Эффекты».</p>
+      <div class="tiles">
+        <button class="tile" data-toggle="effects.weather">
+          <span class="badge">Вкл</span>
+          <b>Эффекты погоды</b>
+          <small>Снег, листья, дождь</small>
+        </button>
+        <button class="tile" data-toggle="weather.live">
+          <span class="badge">Вкл</span>
+          <b>Погода как на улице</b>
+          <small id="live-sub">Укажи город в разделе «Погода»</small>
+        </button>
+        <button class="tile" data-toggle="effects.drifts">
+          <span class="badge">Вкл</span>
+          <b>Сугробы на окнах</b>
+          <small>Копятся на верхних краях окон</small>
+        </button>
+        <button class="tile" data-toggle="pet.enabled">
+          <span class="badge">Вкл</span>
+          <b>Питомец</b>
+          <small id="pet-sub">Гуляет по панели задач</small>
+        </button>
+      </div>
+    </section>
+
+    <!-- Эффекты -->
+    <section class="page" id="effects">
+      <h1>Эффекты</h1>
+      <div class="card rows">
+        <label class="row"><div><b>Плотность</b><small>Сколько всего падает одновременно</small></div>
+          <input type="range" min="0" max="1" step="0.05" data-range="effects.density"></label>
+        <label class="row"><div><b>Размер</b><small>Снежинок, лепестков и листьев</small></div>
+          <input type="range" min="0.5" max="2" step="0.05" data-range="effects.size"></label>
+        <label class="row"><div><b>Скорость</b><small>Как быстро всё падает</small></div>
+          <input type="range" min="0.3" max="2.5" step="0.05" data-range="effects.speed"></label>
+        <label class="row"><div><b>Ветер</b><small>Влево или вправо. С живой погодой берётся настоящий</small></div>
+          <input type="range" min="-1" max="1" step="0.05" data-range="effects.wind"></label>
+      </div>
+      <div class="card rows">
+        <div class="row"><div><b>Сугробы на окнах</b><small>Если выключить — снег растает</small></div>
+          <button class="switch" data-toggle="effects.drifts"></button></div>
+        <div class="row"><div><b>Эффекты погоды</b><small>Всё, что падает сверху</small></div>
+          <button class="switch" data-toggle="effects.weather"></button></div>
+      </div>
+    </section>
+
+    <!-- Погода -->
+    <section class="page" id="weather">
+      <h1>Погода</h1>
+      <div class="card rows">
+        <div class="row"><div><b>Погода как на улице</b><small>Идёт снег — идёт и на экране. Дождь, ветер — тоже</small></div>
+          <button class="switch" data-toggle="weather.live"></button></div>
+        <form class="row" id="city-form"><div><b>Город</b><small id="city-status">Не выбран</small></div>
+          <div class="inline"><input id="city" placeholder="Например, Алматы" autocomplete="off"><button class="btn">Найти</button></div></form>
+      </div>
+      <div class="card weather-now" id="weather-now">
+        <div class="temp" id="w-temp">—</div>
+        <div><b id="w-text">Нет данных</b><small id="w-more">Данные: open-meteo.com, обновляются раз в 15 минут</small></div>
+      </div>
+      <p class="hint">Когда на улице выше +3°, сугробы не копятся.</p>
+    </section>
+
+    <!-- Радио -->
+    <section class="page" id="radio">
+      <h1>Интернет-радио</h1>
+      <div class="card rows">
+        <div class="row"><div><b id="radio-state">Радио выключено</b><small id="radio-now">Выбери станцию — музыка будет играть без рекламы</small></div>
+          <div class="inline">
+            <button class="icon-btn" id="radio-prev" title="Предыдущая">‹</button>
+            <button class="btn" id="radio-play">Включить</button>
+            <button class="icon-btn" id="radio-next" title="Следующая">›</button>
+          </div></div>
+        <label class="row"><div><b>Громкость</b></div>
+          <input type="range" min="0" max="1" step="0.01" id="volume"></label>
+        <form class="row" id="custom-form"><div><b>Своя станция</b><small>Ссылка на поток (mp3 или aac)</small></div>
+          <div class="inline"><input id="custom-url" placeholder="https://…" autocomplete="off"><button class="btn">Играть</button></div></form>
+        <div class="row"><div><b>Таймер сна</b><small id="sleep-left">Музыка выключится сама</small></div>
+          <div class="chips" id="sleep"></div></div>
+      </div>
+      <div class="stations" id="stations"></div>
+      <p class="hint">Станции — <a href="https://somafm.com" target="_blank">SomaFM</a>, некоммерческое радио из Сан-Франциско.</p>
+    </section>
+
+    <!-- Питомец -->
+    <section class="page" id="pet">
+      <h1>Питомец</h1>
+      <div class="pet-layout">
+        <div class="card pet-stage">
+          <div class="chips" id="pet-mode"></div>
+          <canvas id="pet-preview" width="320" height="200"></canvas>
+          <p class="hint">Наведи на питомца мышкой и погладь. Клик — подпрыгнет.</p>
+        </div>
+        <div class="card">
+          <label class="field"><small>Имя</small><input id="pet-name" maxlength="16"></label>
+          <small class="label">Питомец</small>
+          <div class="kinds" id="kinds"></div>
+          <button class="btn wide" id="pet-random">Случайный питомец</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Настройки -->
+    <section class="page" id="settings">
+      <h1>Настройки</h1>
+      <div class="card rows">
+        <div class="row"><div><b>Запускать вместе с системой</b><small>Окно не откроется — только иконка в трее</small></div>
+          <button class="switch" data-toggle="autostart"></button></div>
+        <div class="row"><div><b>Пауза</b><small>Всё убрать с экрана, пока не включишь обратно</small></div>
+          <button class="switch" data-toggle="paused"></button></div>
+      </div>
+      <p class="hint">Форточка v0.3 · закрытие окна не выключает программу — она живёт в трее.</p>
+    </section>
+  </main>
+
+  <audio id="audio" preload="none"></audio>
+  <script src="../shared/pets.js"></script>
+  <script src="panel.js"></script>
+</body>
+</html>

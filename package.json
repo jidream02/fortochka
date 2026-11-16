@@ -1,0 +1,35 @@
+{
+  "name": "fortochka",
+  "version": "0.3.0",
+  "description": "Снег, листья и котик прямо на рабочем столе",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "author": "jidream02",
+  "license": "MIT",
+  "build": {
+    "appId": "com.jidream02.fortochka",
+    "productName": "Форточка",
+    "files": [
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  }
+}

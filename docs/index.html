@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Форточка — снег на рабочем столе</title>
+  <meta name="description" content="Бесплатная программа для Windows: снег, листья и котик прямо на рабочем столе">
+  <link rel="icon" href="icon.png">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: #e8ecf7;
+      font: 16px/1.5 "Segoe UI", system-ui, sans-serif;
+      background: linear-gradient(#0e1530, #1c2b5a 60%, #23356b);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    #snow { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; position: relative; }
+    header { padding: 90px 0 50px; }
+    h1 {
+      font-size: clamp(48px, 9vw, 96px);
+      margin: 0;
+      color: #ffb547;
+      letter-spacing: 1px;
+      text-shadow: 0 4px 0 #8a4b0f;
+    }
+    .lead { font-size: 20px; max-width: 560px; color: #c3cbe4; margin: 14px 0 28px; }
+    .btns { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn {
+      display: inline-block;
+      padding: 12px 22px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      color: #0d1424;
+      background: #ffb547;
+    }
+    .btn.ghost { background: rgba(255,255,255,.08); color: #e8ecf7; border: 1px solid rgba(255,255,255,.15); }
+    .note { font-size: 13px; color: #8d97b5; margin-top: 10px; }
+    h2 { font-size: 28px; margin: 70px 0 18px; }
+    .shot {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 30px 80px rgba(0,0,0,.45);
+      display: block;
+    }
+    .sill { height: 18px; background: #e8ecf7; border-radius: 0 0 10px 10px; margin: -6px -14px 0; position: relative; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+    .card {
+      background: rgba(20, 26, 50, .7);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .card b { display: block; margin-bottom: 4px; font-size: 17px; }
+    .card span { color: #a7b0cc; font-size: 14px; }
+    footer { padding: 70px 0 40px; color: #8d97b5; font-size: 14px; }
+    footer a { color: #c3cbe4; }
+  </style>
+</head>
+<body>
+  <canvas id="snow"></canvas>
+
+  <div class="wrap">
+    <header>
+      <h1>Форточка</h1>
+      <p class="lead">Снег, листья и котик прямо на рабочем столе. Снег падает поверх окон и копится на них сугробами, как на настоящем подоконнике.</p>
+      <div class="btns">
+        <a class="btn" href="https://github.com/jidream02/fortochka/releases/latest">Скачать для Windows</a>
+        <a class="btn ghost" href="https://github.com/jidream02/fortochka">Исходники</a>
+      </div>
+      <p class="note">Бесплатно. Windows 10 / 11. Никакой рекламы и сбора данных.</p>
+    </header>
+
+    <img class="shot" src="panel.png" alt="Окно настроек Форточки">
+    <div class="sill"></div>
+
+    <h2>Как это выглядит</h2>
+    <div class="grid">
+      <div class="card"><b>❄ Зима</b><span>Снег копится на верхних краях окон. Сдвинешь окно — сугроб осыпется.</span></div>
+      <div class="card"><b>✿ Весна</b><span>Лепестки сакуры кружатся и ложатся на окна.</span></div>
+      <div class="card"><b>☀ Лето</b><span>Летит пух одуванчиков, внизу мерцают светлячки.</span></div>
+      <div class="card"><b>❀ Осень</b><span>Листопад и мелкий дождь по стеклу.</span></div>
+      <div class="card"><b>Погода как на улице</b><span>Вводишь город — на экране идёт то же, что за окном. И ветер дует туда же.</span></div>
+      <div class="card"><b>Питомец</b><span>Пиксельный кот или лиса гуляет по панели задач. Его можно погладить.</span></div>
+      <div class="card"><b>Радио</b><span>Спокойная музыка без рекламы и таймер сна.</span></div>
+      <div class="card"><b>Не мешает</b><span>Клики проходят насквозь, программа живёт в трее.</span></div>
+    </div>
+
+    <footer>
+      Сделал <a href="https://github.com/jidream02">jidream02</a> · MIT · погода — <a href="https://open-meteo.com">open-meteo</a>, радио — <a href="https://somafm.com">SomaFM</a>
+    </footer>
+  </div>
+
+  <script>
+    const c = document.getElementById('snow')
+    const g = c.getContext('2d')
+    let W, H
+    const flakes = []
+    function resize() { W = c.width = innerWidth; H = c.height = innerHeight }
+    resize()
+    addEventListener('resize', resize)
+    for (let i = 0; i < 140; i++) {
+      flakes.push({ x: Math.random() * W, y: Math.random() * H, r: 1 + Math.random() * 2.5, s: Math.random() * 6 })
+    }
+    let last = performance.now()
+    function frame(now) {
+      const dt = Math.min(0.05, (now - last) / 1000)
+      last = now
+      g.clearRect(0, 0, W, H)
+      g.fillStyle = 'rgba(255,255,255,.85)'
+      for (const f of flakes) {
+        f.y += (20 + f.r * 12) * dt
+        f.x += Math.sin(now / 1000 + f.s) * 15 * dt
+        if (f.y > H + 5) { f.y = -5; f.x = Math.random() * W }
+        g.beginPath()
+        g.arc(f.x, f.y, f.r, 0, Math.PI * 2)
+        g.fill()
+      }
+      requestAnimationFrame(frame)
+    }
+    requestAnimationFrame(frame)
+  </script>
+</body>
+</html>
